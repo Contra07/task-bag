@@ -11,7 +11,7 @@ using namespace std::chrono;
 // с использованием портфеля задач
 
 const int P = 2; // число рабочих процессов (не используется в MPI)
-const int N = 20000;
+const int N = 20;
 const int T = 10010;
 int arr[N];
 int arrP[N];
@@ -80,7 +80,7 @@ void qSort0(queue<mytask> * taskQueue, int* a, int size){
 	}
 }
 
-void qSort(int* a, int size){
+void qSort(queue<mytask> * taskQueue, int* a, int size){
 	long i = 0;
 	long j = size-1;
 	int temp, p;
@@ -108,11 +108,13 @@ void qSort(int* a, int size){
 	
 	if (j > 0)
 	{
-		qSort(a,j+1);
+		taskQueue->push(mytask(a,(int)(j+1)));
+		//qSort(a,j+1);
 	}
 	if (size > i)
 	{
-		qSort(a+i, size-i);
+		taskQueue->push(mytask(a+i,(int)(size-i)));
+		//Sort(a+i, size-i);
 	}
 }
 
@@ -141,7 +143,8 @@ public:
 			arr[i]=r;
 			arrP[i]=r;
 		}
-		qSort0(&taskQueue, arr, N);
+		// qSort0(&taskQueue, arr, N);
+		taskQueue.push(mytask(arr,N));
 	}
 	virtual ~TaskBag() {}
 	TBag::Task *createTask() { return new TaskBagTask; }
@@ -162,7 +165,7 @@ public:
 	void proc(Task *t)
 	{
 		TaskBagTask *mt = (TaskBagTask *)t;
-		qSort(mt->t.a,mt->t.size );
+		qSort(&taskQueue, mt->t.a,mt->t.size );
 	}
 
 	int cur; // номер текущей строки в матрице С
@@ -199,16 +202,16 @@ int main(int argc, char *argv[])
 	cout << "\nmy duration = " << myduration.count() << endl;
 	// вывод результата параллельного
 	// отключить для больших N
-	// cout << "\nC(parallel)=\n";
-	// for (int i = 0; i < N; i++)
-	// {
-	// 	cout << arr[i] << " ";
-	// }
-	// cout << '\n';
+	cout << "\nC(parallel)=\n";
+	for (int i = 0; i < N; i++)
+	{
+		cout << arr[i] << " ";
+	}
+	cout << '\n';
 
 	// последовательное 
 	auto pstart = steady_clock::now();
-	qSort(arrP, N);
+	//qSort(arrP, N);
 	auto pstop = steady_clock::now();
 	auto pduration = duration_cast<nanoseconds>(pstop - pstart);
 	// вывод результата последовательного 
