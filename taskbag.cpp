@@ -10,9 +10,9 @@ using namespace std::chrono;
 // параллельное умножение матриц
 // с использованием портфеля задач
 
-const int P = 2; // число рабочих процессов (не используется в MPI)
-const int N = 20000;
-const int T = 10010;
+const int P = 12; // число рабочих процессов (не используется в MPI)
+const int N = 500000;
+const int T = N / P;
 int arr[N];
 int arrP[N];
 struct mytask{
