@@ -10,9 +10,9 @@ using namespace std::chrono;
 // параллельное умножение матриц
 // с использованием портфеля задач
 
-const int P = 2; // число рабочих процессов (не используется в MPI)
-const int N = 20;
-const int T = 10010;
+const int P = 14; // число рабочих процессов (не используется в MPI)
+const int N = 50000000;
+const int T = N / P;
 int arr[N];
 int arrP[N];
 struct mytask{
@@ -29,6 +29,44 @@ struct mytask{
 struct mybag{
 	queue<mytask> taskQueue;
 };
+
+void qSort(int* a, int size){
+	long i = 0;
+	long j = size-1;
+	int temp, p;
+	p = a[size>>1];
+	do
+	{
+		while (a[i] < p)
+		{
+			i++;
+		}
+		while (a[j] > p)
+		{
+			j--;
+		}
+		if (i <= j)
+		{
+			temp = a[i];
+			a[i] = a[j];
+			a[j] = temp;
+			i++;
+			j--;
+		}
+		
+	} while (i <= j);
+	
+	if (j > 0)
+	{
+		// taskQueue->push(mytask(a,(int)(j+1)));
+		qSort(a,j+1);
+	}
+	if (size > i)
+	{
+		// taskQueue->push(mytask(a+i,(int)(size-i)));
+		qSort(a+i, size-i);
+	}
+}
 
 void qSort0(queue<mytask> * taskQueue, int* a, int size){
 	long i = 0;
@@ -58,63 +96,25 @@ void qSort0(queue<mytask> * taskQueue, int* a, int size){
 
 	if (j > 0)
 	{
-		if(j+1 < T)
+		if(j+1 > T)
 		{
 			taskQueue->push(mytask(a,(int)j+1));
 		}
 		else
 		{
-			qSort0(taskQueue,a,j+1);
+			qSort(a,j+1);
 		}
 	}
 	if (size > i)
 	{
-		if(size-i < T)
+		if(size-i > T)
 		{
 			taskQueue->push(mytask(a+i,(int)(size-i)));
 		}
 		else
 		{
-			qSort0(taskQueue,a+i,size-i);
+			qSort(a+i,size-i);
 		}
-	}
-}
-
-void qSort(queue<mytask> * taskQueue, int* a, int size){
-	long i = 0;
-	long j = size-1;
-	int temp, p;
-	p = a[size>>1];
-	do
-	{
-		while (a[i] < p)
-		{
-			i++;
-		}
-		while (a[j] > p)
-		{
-			j--;
-		}
-		if (i <= j)
-		{
-			temp = a[i];
-			a[i] = a[j];
-			a[j] = temp;
-			i++;
-			j--;
-		}
-		
-	} while (i <= j);
-	
-	if (j > 0)
-	{
-		taskQueue->push(mytask(a,(int)(j+1)));
-		//qSort(a,j+1);
-	}
-	if (size > i)
-	{
-		taskQueue->push(mytask(a+i,(int)(size-i)));
-		//Sort(a+i, size-i);
 	}
 }
 
@@ -165,7 +165,7 @@ public:
 	void proc(Task *t)
 	{
 		TaskBagTask *mt = (TaskBagTask *)t;
-		qSort(&taskQueue, mt->t.a,mt->t.size );
+		qSort0(&taskQueue, mt->t.a,mt->t.size );
 	}
 
 	int cur; // номер текущей строки в матрице С
@@ -203,15 +203,15 @@ int main(int argc, char *argv[])
 	// вывод результата параллельного
 	// отключить для больших N
 	cout << "\nC(parallel)=\n";
-	for (int i = 0; i < N; i++)
-	{
-		cout << arr[i] << " ";
-	}
-	cout << '\n';
+	// for (int i = 0; i < N; i++)
+	// {
+	// 	cout << arr[i] << " ";
+	// }
+	// cout << '\n';
 
 	// последовательное 
 	auto pstart = steady_clock::now();
-	//qSort(arrP, N);
+	qSort(arrP, N);
 	auto pstop = steady_clock::now();
 	auto pduration = duration_cast<nanoseconds>(pstop - pstart);
 	// вывод результата последовательного 
