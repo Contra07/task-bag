@@ -236,7 +236,7 @@ int main(int argc, char *argv[])
 	// cout << '\n';
 
 	// cout << "\nspeedup = " << ((double)durationPosl.count() / (double)durationParall.count()) << " nanosec\n";
-	cout << ((double)durationPosl.count() / (double)durationParall.count()) << " ";
+	// cout << ((double)durationPosl.count() / (double)durationParall.count()) << " ";
 
 	delete [] arrayPosl;
 	delete [] arrayParall;
