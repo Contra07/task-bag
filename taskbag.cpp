@@ -2,6 +2,7 @@
 #include <stdio.h>
 
 #include <iostream>
+#include <string>
 #include <queue>
 #include <chrono>
 using namespace std;
@@ -10,27 +11,24 @@ using namespace std::chrono;
 // параллельное умножение матриц
 // с использованием портфеля задач
 
-const int P = 12; // число рабочих процессов (не используется в MPI)
-const int N = 500000;
-const int T = N / P;
-int arr[N];
-int arrP[N];
-struct mytask{
-	int* a;
-	int size;
-	mytask(int * a1, int s1)
+// const int P = 12; // число рабочих процессов (не используется в MPI)
+// const int N = 50000000;
+// const int T = N / P;
+// int arr[N];
+// int arrP[N];
+
+struct array_task{
+	int* array;
+	int length;
+	array_task(int * a1, int s1)
 	{
-		a = a1;
-		size = s1;
+		array = a1;
+		length = s1;
 	}
-	mytask(){}
+	array_task(){}
 };
 
-struct mybag{
-	queue<mytask> taskQueue;
-};
-
-void qSort0(queue<mytask> * taskQueue, int* a, int size){
+void qSortInitTasks(queue<array_task> * taskQueue, int* a, int size, int limit){
 	long i = 0;
 	long j = size-1;
 	int temp, p;
@@ -58,29 +56,29 @@ void qSort0(queue<mytask> * taskQueue, int* a, int size){
 
 	if (j > 0)
 	{
-		if(j+1 < T)
+		if(j+1 < limit)
 		{
-			taskQueue->push(mytask(a,(int)j+1));
+			taskQueue->push(array_task(a,(int)j+1));
 		}
 		else
 		{
-			qSort0(taskQueue,a,j+1);
+			qSortInitTasks(taskQueue,a,j+1, limit);
 		}
 	}
 	if (size > i)
 	{
-		if(size-i < T)
+		if(size-i < limit)
 		{
-			taskQueue->push(mytask(a+i,(int)(size-i)));
+			taskQueue->push(array_task(a+i,(int)(size-i)));
 		}
 		else
 		{
-			qSort0(taskQueue,a+i,size-i);
+			qSortInitTasks(taskQueue,a+i,size-i, limit);
 		}
 	}
 }
 
-void qSort(int* a, int size){
+void qSortStandart(int* a, int size){
 	long i = 0;
 	long j = size-1;
 	int temp, p;
@@ -108,11 +106,11 @@ void qSort(int* a, int size){
 	
 	if (j > 0)
 	{
-		qSort(a,j+1);
+		qSortStandart(a,j+1);
 	}
 	if (size > i)
 	{
-		qSort(a+i, size-i);
+		qSortStandart(a+i, size-i);
 	}
 }
 
@@ -130,23 +128,18 @@ public:
 		void send_result() {} // запись результата в поток (только для распределенной реализации)
 		void recv_result() {} // чтение результата из потока (только для распределенной реализации)
 
-		mytask t; // номер вычисляемой строки
+		array_task t; // номер вычисляемой строки
 	};
 
 public:
-	TaskBag(int num_prc, int argc, char *argv[]) : TBag(num_prc, argc, argv)
+	TaskBag(int num_prc, int argc, char *argv[], int* array, int array_length, int limit) : TBag(num_prc, argc, argv)
 	{
-		for(int i=0; i<N; i++){
-			int r = rand() % N;
-			arr[i]=r;
-			arrP[i]=r;
-		}
-		qSort0(&taskQueue, arr, N);
+		qSortInitTasks(&taskQueue, array, array_length, limit);
 	}
 	virtual ~TaskBag() {}
 	TBag::Task *createTask() { return new TaskBagTask; }
 
-	queue<mytask> taskQueue;
+	queue<array_task> taskQueue;
 
 	bool if_job() 
 	{ 
@@ -162,7 +155,7 @@ public:
 	void proc(Task *t)
 	{
 		TaskBagTask *mt = (TaskBagTask *)t;
-		qSort(mt->t.a,mt->t.size );
+		qSortStandart(mt->t.array,mt->t.length );
 	}
 
 	int cur; // номер текущей строки в матрице С
@@ -170,55 +163,83 @@ public:
 
 int main(int argc, char *argv[])
 {
-	TaskBag bag(P, argc, argv); // используем P рабочих процессов(не используется в MPI)
-
-	// cout << "\nC(init)=\n";
-	// for (int i = 0; i < N; i++)
-	// {
-	// 	cout << arr[i] << " ";
-	// }
-	// cout << '\n';
+	
+	int n{std::stoi(argv[1])};
+	int p{std::stoi(argv[2])};
+	int t = n / p;
 	
 	// инициализация
-	// for (int i = 0; i < N; i++)
+	int* arrayPosl = new int[n];
+	int* arrayParall = new int[n];
+
+	for(int i=0; i<n; i++){
+		int r = rand() % n;
+		arrayPosl[i]=r;
+		arrayParall[i]=r;
+	}
+	
+	// вывод изначального массива
+	// cout << "\nArray(init)=\n";
+	// for (int i = 0; i < n; i++)
 	// {
-	// 	arrP[i] = arr[i];
+	// 	cout << arrayParall[i] << " ";
 	// }
+	// cout << '\n';
 
-	// параллельное
-	auto start = steady_clock::now();
+	TaskBag bag(p, argc, argv, arrayParall, n, t); // используем P рабочих процессов(не используется в MPI)
+
+	// подсчет параллельного
+	auto startParall = steady_clock::now();
 	bag.run();
-	auto stop = steady_clock::now();
-	auto myduration = duration_cast<nanoseconds>(stop - start);
-	cout << "\nspeedup = " << bag.speedup(); // 1-при логической отладке,
-	// P-при параллельном выполении,
-	// предсказываемое значение ускорения для данного P при дискретно-событийной эмуляции вычислений
-	// внимание! режим эмуляции доступен только для ОС Windows
+	auto stopParall = steady_clock::now();
+	auto durationParall = duration_cast<nanoseconds>(stopParall - startParall);
 
-	cout << "\nduration = " << bag.duration() << " sec\n";
-	cout << "\nmy duration = " << myduration.count() << endl;
 	// вывод результата параллельного
+
+	// cout << "\nbag duration = " << bag.duration() << " sec\n";
+	// cout << "\nparrallel duration = " << durationParall.count() << " nanosec\n";
+	cout << (durationParall.count()) << " ";
+
 	// отключить для больших N
-	// cout << "\nC(parallel)=\n";
-	// for (int i = 0; i < N; i++)
+	// cout << "\nArray(parallel)=\n";
+	// for (int i = 0; i < n; i++)
 	// {
-	// 	cout << arr[i] << " ";
+	// 	cout << arrayParall[i] << " ";
+	// }
+	// cout << '\n';
+
+	// вывод изначального массива
+	// cout << "\nArray(init)=\n";
+	// for (int i = 0; i < n; i++)
+	// {
+	// 	cout << arrayPosl[i] << " ";
 	// }
 	// cout << '\n';
 
 	// последовательное 
-	auto pstart = steady_clock::now();
-	qSort(arrP, N);
-	auto pstop = steady_clock::now();
-	auto pduration = duration_cast<nanoseconds>(pstop - pstart);
+	auto startPosl = steady_clock::now();
+	qSortStandart(arrayPosl, n);
+	auto stopPosl = steady_clock::now();
+	auto durationPosl = duration_cast<nanoseconds>(stopPosl - startPosl);
+	
 	// вывод результата последовательного 
+
+	// cout << "\nposl duration = " << durationPosl.count() << " nanosec\n";
+	cout << durationPosl.count() << " ";
+
 	// отключить для больших N
-	cout << "\nmy posl duration = " << pduration.count() << endl;
-	// cout << "\nC(serial)=\n";
-	// for (int i = 0; i < N; i++)
+	// cout << "\nArray(parallel)=\n";
+	// for (int i = 0; i < n; i++)
 	// {
-	// 	cout << arrP[i] << " ";
+	// 	cout << arrayPosl[i] << " ";
 	// }
-	cout << '\n';
+	// cout << '\n';
+
+	// cout << "\nspeedup = " << ((double)durationPosl.count() / (double)durationParall.count()) << " nanosec\n";
+	cout << ((double)durationPosl.count() / (double)durationParall.count()) << " ";
+
+	delete [] arrayPosl;
+	delete [] arrayParall;
+	
 	return 0;
 }
