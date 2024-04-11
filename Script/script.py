@@ -19,4 +19,4 @@ while i <= pow(10, n):
             numbers = re.findall(r'\d+\.\d+|\d+', result.stdout)
             writer.writerow(numbers)
         s += 1
-        i = pow(10, n)
+        i = pow(10, s)

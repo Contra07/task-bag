@@ -197,8 +197,8 @@ int main(int argc, char *argv[])
 	// вывод результата параллельного
 
 	// cout << "\nbag duration = " << bag.duration() << " sec\n";
-	// cout << "\nparrallel duration = " << durationParall.count() << " nanosec\n";
-	cout << (durationParall.count()) << " ";
+	cout << "\nparrallel duration = " << durationParall.count() << " nanosec\n";
+	// cout << (durationParall.count()) << " ";
 
 	// отключить для больших N
 	// cout << "\nArray(parallel)=\n";
@@ -224,8 +224,8 @@ int main(int argc, char *argv[])
 	
 	// вывод результата последовательного 
 
-	// cout << "\nposl duration = " << durationPosl.count() << " nanosec\n";
-	cout << durationPosl.count() << " ";
+	cout << "\nposl duration = " << durationPosl.count() << " nanosec\n";
+	// cout << durationPosl.count() << " ";
 
 	// отключить для больших N
 	// cout << "\nArray(parallel)=\n";
@@ -235,7 +235,7 @@ int main(int argc, char *argv[])
 	// }
 	// cout << '\n';
 
-	// cout << "\nspeedup = " << ((double)durationPosl.count() / (double)durationParall.count()) << " nanosec\n";
+	cout << "\nspeedup = " << ((double)durationPosl.count() / (double)durationParall.count()) ;
 	// cout << ((double)durationPosl.count() / (double)durationParall.count()) << " ";
 
 	delete [] arrayPosl;
