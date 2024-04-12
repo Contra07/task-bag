@@ -56,7 +56,7 @@ void qSortInitTasks(queue<array_task> * taskQueue, int* a, int size, int limit){
 
 	if (j > 0)
 	{
-		if(j+1 < limit)
+		if(j+1 > limit)
 		{
 			taskQueue->push(array_task(a,(int)j+1));
 		}
@@ -67,7 +67,7 @@ void qSortInitTasks(queue<array_task> * taskQueue, int* a, int size, int limit){
 	}
 	if (size > i)
 	{
-		if(size-i < limit)
+		if(size-i > limit)
 		{
 			taskQueue->push(array_task(a+i,(int)(size-i)));
 		}
@@ -186,10 +186,9 @@ int main(int argc, char *argv[])
 	// }
 	// cout << '\n';
 
-	TaskBag bag(p, argc, argv, arrayParall, n, t); // используем P рабочих процессов(не используется в MPI)
-
 	// подсчет параллельного
 	auto startParall = steady_clock::now();
+	TaskBag bag(p, argc, argv, arrayParall, n, t); // используем P рабочих процессов(не используется в MPI)
 	bag.run();
 	auto stopParall = steady_clock::now();
 	auto durationParall = duration_cast<nanoseconds>(stopParall - startParall);
@@ -237,6 +236,15 @@ int main(int argc, char *argv[])
 
 	cout << "\nspeedup = " << ((double)durationPosl.count() / (double)durationParall.count()) ;
 	// cout << ((double)durationPosl.count() / (double)durationParall.count()) << " ";
+
+
+	// int i = 0;
+	// while (i < n-1 && arrayParall[i] <= arrayParall[i+1])
+	// {
+	// 	i++;
+	// }
+	
+	// std::cout << "\n" << (i == n-1) << "\n";
 
 	delete [] arrayPosl;
 	delete [] arrayParall;
