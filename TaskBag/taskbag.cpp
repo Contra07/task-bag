@@ -56,7 +56,7 @@ void qSortInitTasks(queue<array_task> * taskQueue, int* a, int size, int limit){
 
 	if (j > 0)
 	{
-		if(j+1 > limit)
+		if(j+1 < limit)
 		{
 			taskQueue->push(array_task(a,(int)j+1));
 		}
@@ -67,7 +67,7 @@ void qSortInitTasks(queue<array_task> * taskQueue, int* a, int size, int limit){
 	}
 	if (size > i)
 	{
-		if(size-i > limit)
+		if(size-i < limit)
 		{
 			taskQueue->push(array_task(a+i,(int)(size-i)));
 		}
@@ -234,7 +234,7 @@ int main(int argc, char *argv[])
 	// }
 	// cout << '\n';
 
-	//cout << "\nspeedup = " << ((double)durationPosl.count() / (double)durationParall.count()) ;
+	cout << "\nspeedup = " << ((double)durationPosl.count() / (double)durationParall.count()) ;
 	// cout << ((double)durationPosl.count() / (double)durationParall.count()) << " ";
 
 
