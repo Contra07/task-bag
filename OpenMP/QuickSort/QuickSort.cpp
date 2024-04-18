@@ -137,9 +137,9 @@ int main(int argc, char* argv[])
 
 	// cout << "\nbag duration = " << bag.duration() << " sec\n";
 
-	std::cout << "\nparrallel duration = " << durationParall.count() << " nanosec\n";
+	//std::cout << "\nparrallel duration = " << durationParall.count() << " nanosec\n";
 
-	// cout << (durationParall.count()) << " ";
+	std::cout << (durationParall.count()) << " ";
 
 	//// ��������� ��� ������� N
 	// std::cout << "\nArray(parallel)=\n";
@@ -166,8 +166,8 @@ int main(int argc, char* argv[])
 
 	// ����� ���������� ����������������� 
 
-	std::cout << "\nposl duration = " << durationPosl.count() << " nanosec\n";
-	// cout << durationPosl.count() << " ";
+	//std::cout << "\nposl duration = " << durationPosl.count() << " nanosec\n";
+	std::cout << durationPosl.count() << " ";
 
 	// ��������� ��� ������� N
 	// std::cout << "\nArray(parallel)=\n";
@@ -177,7 +177,7 @@ int main(int argc, char* argv[])
 	// }
 	// std::cout << '\n';
 
-	std::cout << "\nspeedup = " << ((double)durationPosl.count() / (double)durationParall.count());
+	//std::cout << "\nspeedup = " << ((double)durationPosl.count() / (double)durationParall.count());
 	// cout << ((double)durationPosl.count() / (double)durationParall.count()) << " ";
 
 	// int i = 0;
